@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mesqo — Amsterdam Specialty Café Lead List</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sand:#F5EFE0;--dark:#1C1A14;--espresso:#3B2A1A;
+    --mesquite:#8B6340;--cream:#FAF7F0;--warm:#C9A97A;
+    --accent:#D45C2B;--border:#D9CEB7;--green:#2B7A3E;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--dark);font-size:13px;}
+  .header{background:var(--espresso);padding:26px 40px 22px;display:flex;align-items:flex-end;justify-content:space-between;gap:24px;}
+  .header h1{font-family:'Playfair Display',serif;font-size:25px;color:var(--sand);line-height:1.1;}
+  .header h1 em{font-style:italic;color:var(--warm);}
+  .header p{margin-top:5px;color:#A89070;font-size:11px;font-weight:300;}
+  .stats{display:flex;gap:24px;text-align:right;}
+  .stat .num{font-family:'Playfair Display',serif;font-size:22px;color:var(--warm);}
+  .stat .label{color:#A89070;font-size:10px;font-weight:300;}
+  .controls{background:var(--sand);padding:10px 40px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+  .controls label{font-size:10px;font-weight:500;color:var(--mesquite);text-transform:uppercase;letter-spacing:.6px;}
+  .controls input[type=text],.controls select{padding:5px 9px;border:1px solid var(--border);border-radius:4px;background:var(--cream);font-family:'DM Sans',sans-serif;font-size:12px;color:var(--dark);outline:none;}
+  .controls input[type=text]{width:190px;}
+  .controls input:focus,.controls select:focus{border-color:var(--mesquite);}
+  .btn{margin-left:auto;background:var(--accent);color:#fff;border:none;padding:6px 14px;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;}
+  .btn:hover{background:#b84d22;}
+  .legend{padding:5px 40px;background:var(--cream);border-bottom:1px solid var(--border);font-size:11px;color:#888;}
+  .section{border-bottom:2px solid var(--border);}
+  .sh{background:var(--sand);padding:8px 40px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;border-bottom:1px solid var(--border);}
+  .sh:hover{background:#EDE6D4;}
+  .sh h2{font-family:'Playfair Display',serif;font-size:13px;font-weight:500;color:var(--espresso);}
+  .sh .badge{background:var(--mesquite);color:#fff;font-size:10px;font-weight:500;padding:2px 7px;border-radius:12px;}
+  .sh .chev{margin-left:auto;color:var(--mesquite);font-size:10px;transition:transform .2s;}
+  .sh.collapsed .chev{transform:rotate(-90deg);}
+  .sb.hidden{display:none;}
+  table{width:100%;border-collapse:collapse;table-layout:fixed;}
+  thead tr{background:var(--espresso);}
+  thead th{text-align:left;padding:7px 12px;font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.7px;color:#A89070;white-space:nowrap;}
+  th.w0{width:32px;}th.w1{width:185px;}th.w2{width:195px;}th.w3{width:120px;}th.w4{width:205px;}th.w5{width:105px;}
+  tbody tr{border-bottom:1px solid var(--border);}
+  tbody tr:hover{background:#F0E9D8;}
+  td{padding:7px 12px;vertical-align:middle;font-size:12px;}
+  .n{color:#B0A090;font-size:11px;}
+  .nm{font-weight:500;}
+  .ad{color:#6B5E4E;font-size:11px;}
+  .ph{font-size:11px;color:#6B5E4E;}
+  .em input{width:100%;border:1px solid transparent;background:transparent;font-family:'DM Sans',sans-serif;font-size:11px;color:var(--dark);padding:2px 4px;border-radius:3px;outline:none;}
+  .em input:hover{border-color:var(--border);background:var(--cream);}
+  .em input:focus{border-color:var(--mesquite);background:#fff;}
+  .em input.ok{color:var(--green);font-weight:500;}
+  .no input{width:100%;border:1px solid transparent;background:transparent;font-family:'DM Sans',sans-serif;font-size:11px;color:#6B5E4E;padding:2px 4px;border-radius:3px;outline:none;}
+  .no input:hover{border-color:var(--border);background:var(--cream);}
+  .no input:focus{border-color:var(--mesquite);background:#fff;}
+  .st select{border:1px solid var(--border);border-radius:12px;padding:2px 7px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;outline:none;}
+  .s-new{background:#F5EFE0;color:#8B6340;border-color:#C9A97A!important;}
+  .s-contacted{background:#EAF4E8;color:#3B6B35;border-color:#7AB870!important;}
+  .s-meeting{background:#E8EFF8;color:#2B4F8B;border-color:#7A9FCC!important;}
+  .s-converted{background:#F8EEE8;color:#8B3B2A;border-color:#CC7A5A!important;}
+  .s-skip{background:#F0F0F0;color:#888;border-color:#CCC!important;}
+  .none{padding:20px 40px;text-align:center;color:#AAA;font-style:italic;display:none;}
+  .footer{padding:12px 40px;background:var(--sand);font-size:11px;color:#A89070;border-top:1px solid var(--border);display:flex;justify-content:space-between;}
+</style>
+</head>
+<body>
+<div class="header">
+  <div>
+    <h1>Mesqo <em>Amsterdam</em><br>Specialty Café Lead List</h1>
+    <p>Caffeine-free mesquite alternative · B2B outreach · April 2026 · <span style="color:var(--green)">●</span> green = email verified via website research</p>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="num" id="tc">–</div><div class="label">Cafés</div></div>
+    <div class="stat"><div class="num" id="ec">0</div><div class="label">Emails</div></div>
+    <div class="stat"><div class="num" id="cc">0</div><div class="label">Contacted</div></div>
+  </div>
+</div>
+<div class="controls">
+  <label>Zoek</label>
+  <input type="text" id="q" placeholder="Naam, adres, email...">
+  <label>Status</label>
+  <select id="fs"><option value="">Alle</option><option value="new">New</option><option value="contacted">Contacted</option><option value="meeting">Meeting</option><option value="converted">Converted</option><option value="skip">Skip</option></select>
+  <label>Buurt</label>
+  <select id="fn"><option value="">Alle</option></select>
+  <label>Email</label>
+  <select id="fe"><option value="">Alle</option><option value="y">✅ Bevestigd</option><option value="n">❌ Ontbreekt</option></select>
+  <span style="font-size:11px;color:#888;"><strong id="sc">–</strong> resultaten</span>
+  <button class="btn" onclick="csv()">Export CSV</button>
+</div>
+<div class="legend">🟢 Groen = email gevonden via website · Klik email/notes-cel om te bewerken · Status bijhouden per café</div>
+<div id="wrap"></div>
+<div class="none" id="none">Geen resultaten.</div>
+<div class="footer">
+  <span>Google Places + directe websiteonderzoek · April 2026</span>
+  <span>Cafés zonder email: check Instagram bio of stuur DM. Eigenaren reageren snel.</span>
+</div>
+
+<script>
+const D=[
+// ─ DE PIJP ─────────────────────────────────────────────────────────────────
+{nb:"De Pijp",nm:"Scandinavian Embassy",ad:"Sarphatipark 34",ph:"+31 6 81600140",em:"info@scandinavianembassy.nl",no:"Nordic roasters, terrace. Also bakery @ Europaplein 87"},
+{nb:"De Pijp",nm:"Elevate Coffee Lab",ad:"Van der Helstplein 10H",ph:"",em:"elevatecoffeelab@gmail.com",no:"Owner Ahmad, top single origins, workshop evenings, no laptops/sugar"},
+{nb:"De Pijp",nm:"Harmani Coffee & Brunch",ad:"Frans Halsstraat 89H",ph:"+31 6 21679743",em:"",no:"Own roastery, Greek brunch, 4.9/1554 reviews. Also Jordaan: Tweede Egelantiersdwarsstraat 18A"},
+{nb:"De Pijp",nm:"Badeta Koffiebranders (De Pijp)",ad:"Tweede van der Helststraat 18h",ph:"",em:"info@badeta.nl",no:"Own roastery, pink minimalist. Also Watergraafsmeer: Helmholtzstraat 37"},
+{nb:"De Pijp",nm:"Elevate Coffee Lab",ad:"Van der Helstplein 10H",ph:"",em:"elevatecoffeelab@gmail.com",no:"Owner Ahmad - duplicate removed"},
+{nb:"De Pijp",nm:"Reload Coffee",ad:"Saenredamstraat 26h",ph:"",em:"",no:"Owner Sofia, very welcoming, dog-friendly, 4.9 rating"},
+{nb:"De Pijp",nm:"Coffee Bru (De Pijp)",ad:"Van Woustraat 113",ph:"",em:"info@coffeebru.nl",no:"Rum Baba beans. Also Oost: Beukenplein 14"},
+{nb:"De Pijp",nm:"Sol Coffee Bar",ad:"Tweede Sweelinckstraat 6",ph:"",em:"",no:"Wed–Sun only, board games, 4.9 rating"},
+{nb:"De Pijp",nm:"MIRO Specialty Coffee",ad:"Ceintuurbaan 276-h",ph:"",em:"",no:"Newest addition De Pijp, highly rated"},
+];
+
+// Remove duplicate (cleanup)
+const DATA = [
+// ─ DE PIJP ──────────────────────────────────────────────────────────────────
+{nb:"De Pijp",nm:"Scandinavian Embassy",ad:"Sarphatipark 34",ph:"+31 6 81600140",em:"info@scandinavianembassy.nl",no:"Nordic roasters (Drop, La Cabra). Terrace. Bakery @ Europaplein 87"},
+{nb:"De Pijp",nm:"Elevate Coffee Lab",ad:"Van der Helstplein 10H",ph:"",em:"elevatecoffeelab@gmail.com",no:"Owner Ahmad. Top single origins, workshop evenings. No laptops or sugar."},
+{nb:"De Pijp",nm:"Harmani Coffee & Brunch",ad:"Frans Halsstraat 89H",ph:"+31 6 21679743",em:"",no:"Own micro-roastery, Greek brunch, 4.9/1554. Also Jordaan Patisserie: Tweede Egelantiersdwarsstraat 18A"},
+{nb:"De Pijp",nm:"Badeta Koffiebranders (De Pijp)",ad:"Tweede van der Helststraat 18h",ph:"",em:"info@badeta.nl",no:"Own roastery, minimalist pink interior. Also Watergraafsmeer: Helmholtzstraat 37"},
+{nb:"De Pijp",nm:"Reload Coffee",ad:"Saenredamstraat 26h",ph:"",em:"",no:"Owner Sofia, very welcoming, dog-friendly, 4.9 rating"},
+{nb:"De Pijp",nm:"Coffee Bru (De Pijp)",ad:"Van Woustraat 113",ph:"020 751 9956",em:"info@coffeebru.nl",no:"Tropical vibe, Rum Baba beans. Also Oost: Beukenplein 14H"},
+{nb:"De Pijp",nm:"Sol Coffee Bar",ad:"Tweede Sweelinckstraat 6",ph:"",em:"",no:"Wed–Sun only, board games, super local, 4.9"},
+{nb:"De Pijp",nm:"MIRO Specialty Coffee",ad:"Ceintuurbaan 276-h",ph:"",em:"",no:"New, highly rated, De Pijp specialty bar"},
+
+// ─ JORDAAN ──────────────────────────────────────────────────────────────────
+{nb:"Jordaan",nm:"Kafenion Amsterdam",ad:"Bloemgracht 49",ph:"+31 6 26707727",em:"",no:"Greek café, iconic canal location, 4.9/3557 reviews. Also Utrecht + Barcelona."},
+{nb:"Jordaan",nm:"Saint-Jean",ad:"Lindengracht 158",ph:"",em:"info@saintjean.nl",no:"100% plant-based bakery + DAK coffee, 51K IG followers. Also deli: Lindengracht 158H"},
+{nb:"Jordaan",nm:"Toki",ad:"Binnen Dommersstraat 15",ph:"",em:"hi@toki-times.com",no:"Marble interior, Bonanza beans, great tea, dog-friendly. 4.5/1100+ reviews"},
+{nb:"Jordaan",nm:"Haku Specialty Coffee",ad:"Rozengracht 69",ph:"+31 6 41775443",em:"",no:"Japanese-style, in-house roasting, private garden, ceramics. Mon closed."},
+{nb:"Jordaan",nm:"Screaming Beans",ad:"Runstraat 6",ph:"+31 6 22028077",em:"contact@screamingbeans.nl",no:"Own roastery, 9 Straatjes. Also: Utrechtsestraat 75, Waterlooplein 129"},
+{nb:"Jordaan",nm:"Luuk's Coffee (Noordermarkt)",ad:"Westerstraat 3",ph:"",em:"info@luukscoffee.com",no:"Own roastery, espresso-focused. Also Centrum: Vijzelgracht 49"},
+{nb:"Jordaan",nm:"Rum Baba Elandsgracht",ad:"Elandsgracht 134",ph:"",em:"info@rumbaba.nl",no:"Own roastery, living room vibe, free workshops monthly"},
+{nb:"Jordaan",nm:"Fanke Coffee Amsterdam",ad:"Rozengracht 91",ph:"+31 6 41867858",em:"",no:"Greek specialty, small and rising"},
+{nb:"Jordaan",nm:"Koffiespot",ad:"Elandsgracht 53",ph:"",em:"",no:"Moroccan-owned, cozy, outside seating"},
+{nb:"Jordaan",nm:"NU koffie & delicatessen",ad:"Tweede Egelantiersdwarsstraat 13H",ph:"",em:"",no:"Great sandwiches, neighbourhood gem"},
+{nb:"Jordaan",nm:"Nous Coffee (Haarlemmerplein)",ad:"Haarlemmerplein 29",ph:"",em:"",no:"Lilac design, cinnamon buns, 'your neighbourhood living room'. Also Noord: Docklandsweg 29"},
+
+// ─ CENTRUM ──────────────────────────────────────────────────────────────────
+{nb:"Centrum",nm:"Sango Specialty Coffee",ad:"Stromarkt 15",ph:"+31 20 723 1949",em:"info@sangoamsterdam.com",no:"1670 building, own micro-roastery (glass floor panel), screen-free, no laptops"},
+{nb:"Centrum",nm:"Hummingbird Coffee Amsterdam",ad:"Spuistraat 217",ph:"+31 6 24331985",em:"info@hummingbird.amsterdam",no:"Multi-roaster, Amsterdam's first Modbar, Onyx house blend"},
+{nb:"Centrum",nm:"Bocca Coffee",ad:"Kerkstraat 96H",ph:"+31 321 314 667",em:"info@bocca.nl",no:"Pioneer NL specialty since 2001, B-Corp, barista training school"},
+{nb:"Centrum",nm:"De Koffieschenkerij",ad:"Oudekerksplein 27",ph:"",em:"",no:"Former church courtyard, apple pie, QR ordering, 4.8/3510 reviews"},
+{nb:"Centrum",nm:"Morning Owl Coffee",ad:"Zeedijk 71",ph:"",em:"morningowlcoffee@gmail.com",no:"Multi-roaster, takeaway-focused, Chinatown. Tue–Sun."},
+{nb:"Centrum",nm:"Black Gold Amsterdam",ad:"Korte Koningsstraat 13H",ph:"+31 6 51086841",em:"",no:"Vinyl + specialty coffee, White Label beans, DJ sessions, unique venue"},
+{nb:"Centrum",nm:"Back to Black (Centrum)",ad:"Weteringstraat 48",ph:"+31 20 771 8364",em:"info@backtoblackcoffee.nl",no:"Own roastery, near Rijksmuseum, café cat, homemade cakes"},
+{nb:"Centrum",nm:"LOT61 Centraal Station",ad:"Oosterdoksstraat 4",ph:"+31 6 11590211",em:"wholesale@lot61.com",no:"Doubletree hotel, high footfall, laptop-friendly"},
+{nb:"Centrum",nm:"Luuk's Coffee (Vijzelgracht)",ad:"Vijzelgracht 49",ph:"",em:"info@luukscoffee.com",no:"Second Luuk's location, near Rijksmuseum, takeaway-focused"},
+{nb:"Centrum",nm:"Screaming Beans (Utrechtsestraat)",ad:"Utrechtsestraat 75",ph:"",em:"contact@screamingbeans.nl",no:"Second Screaming Beans location, De Pijp border"},
+{nb:"Centrum",nm:"Screaming Beans (Waterlooplein)",ad:"Waterlooplein 129",ph:"",em:"contact@screamingbeans.nl",no:"Third Screaming Beans location"},
+
+// ─ OUD-WEST ─────────────────────────────────────────────────────────────────
+{nb:"Oud-West",nm:"LOT61 Coffee Roasters (flagship)",ad:"Kinkerstraat 112",ph:"+31 20 244 1988",em:"wholesale@lot61.com",no:"B-Corp roastery, flagship, Probat roaster in basement"},
+{nb:"Oud-West",nm:"DAK Showroom by DAK Coffee Roasters",ad:"Bellamyplein 16H",ph:"+31 6 13253512",em:"info@dakcoffeeroasters.com",no:"One of NL's fastest-growing roasters, Slayer machine, cupping events"},
+{nb:"Oud-West",nm:"Uncommon Coffee",ad:"Eerste Constantijn Huygensstraat 63H",ph:"",em:"info@uncommonams.com",no:"Own roastery, seasonal menu, Uncommon Bar next door (dinner Thu–Sat)"},
+{nb:"Oud-West",nm:"Five Ways Coffee Roasters (West)",ad:"Kinkerstraat 186",ph:"",em:"",no:"Owner Ben (Melbourne), own roastery on Loring S35, near Ten Kate market"},
+{nb:"Oud-West",nm:"Monks Coffee Roasters",ad:"Bilderdijkstraat 46H",ph:"+31 6 23131661",em:"training@monkscoffee.nl",no:"Owner Patrick (Irish), own roastery, weekend brunch, dog-friendly"},
+{nb:"Oud-West",nm:"White Label Coffee (West)",ad:"Jan Evertsenstraat 136",ph:"+31 20 737 1359",em:"info@whitelabelcoffee.nl",no:"Own roastery, DJs, multi-level. Won Roast Masters 2019."},
+{nb:"Oud-West",nm:"Friedhats FUKU Cafe",ad:"Bos en Lommerweg 136 HS",ph:"+31 6 55298976",em:"gimme@friedhats.com",no:"Lex = World Barista Champion 2016, funky/experimental, own roastery"},
+{nb:"Oud-West",nm:"Back to Black (West)",ad:"Van Hallstraat 268",ph:"+31 20 337 7588",em:"info@backtoblackcoffee.nl",no:"Own roastery, homemade cakes, outdoor seating"},
+{nb:"Oud-West",nm:"The Miners Coffee",ad:"Tollensstraat 53A",ph:"",em:"",no:"Near Foodhallen, stylish interior, decaf no extra cost"},
+{nb:"Oud-West",nm:"Fred's koffie",ad:"Tollensstraat 65 F",ph:"+31 6 40829213",em:"",no:"New, family-run, Italian-style bar counter, 5.0 rating"},
+{nb:"Oud-West",nm:"Cafecito Overtoom",ad:"Overtoom 429H",ph:"",em:"coffee@cafecito.nl",no:"Own roastery chain, 7 AMS locations + Rotterdam. Also: Van Baerlestraat, Beethoven, Nassaukade, Linnaeusstr, Rijnstr"},
+{nb:"Oud-West",nm:"Noi Coffee & Eatery",ad:"Jan Evertsenstraat 123",ph:"+31 6 85578355",em:"",no:"Sibling-run, best cinnamon rolls in AMS per reviews"},
+{nb:"Oud-West",nm:"Ikinari Coffee",ad:"Potgieterstraat 47 HS",ph:"",em:"",no:"Wed–Sun only, 5.0 rating, tiny gem"},
+{nb:"Oud-West",nm:"The Coffee Bridge",ad:"Baarsjesweg 211",ph:"",em:"",no:"Natural light, work-friendly, good dirty chai"},
+{nb:"Oud-West",nm:"Sam's koffie (West)",ad:"Wenslauerstraat 2a",ph:"+31 6 40232342",em:"info@samskoffielunch.nl",no:"Ten Kate market location. Brazuca coffee. Also Noord: Meeuwenlaan 126B"},
+
+// ─ WESTERPARK ───────────────────────────────────────────────────────────────
+{nb:"Westerpark",nm:"Espressofabriek (Westerpark)",ad:"Pazzanistraat 39",ph:"+31 20 486 2106",em:"info@espressofabriek.nl",no:"Pioneer AMS specialty since 2005, own roastery (Giesen 15), former gas factory. Also IJburg + Zeeburgereiland"},
+{nb:"Westerpark",nm:"30ml Coffee Roasters",ad:"Van Noordtstraat 26",ph:"",em:"",no:"Utrecht roastery now in AMS, specialty filter + espresso, all-day breakfast"},
+
+// ─ NOORD ────────────────────────────────────────────────────────────────────
+{nb:"Noord",nm:"White Label Coffee (Noord)",ad:"Zonneplein 4",ph:"",em:"info@whitelabelcoffee.nl",no:"Noord location, same roastery as West"},
+{nb:"Noord",nm:"Gentle Place Coffee",ad:"Distelweg 409",ph:"",em:"",no:"Friendly neighbourhood café, barista courses, chess boards"},
+{nb:"Noord",nm:"SUBCULT",ad:"Spreeuwenpark 13A",ph:"",em:"hello@subcultamsterdam.com",no:"Vegan bar/café, owners Jort & Caitlin, craft beer + natty wine, music"},
+{nb:"Noord",nm:"Sam's koffie (Noord)",ad:"Meeuwenlaan 126B",ph:"+31 6 40232342",em:"info@samskoffielunch.nl",no:"Spacious, laptop-friendly, Brazuca coffee. Also West: Wenslauerstraat 2a"},
+{nb:"Noord",nm:"Nous Coffee (Docklandsweg)",ad:"Docklandsweg 29",ph:"",em:"",no:"Minimalist lilac design, dog-friendly. Also Haarlemmerplein 29 (Centrum)"},
+{nb:"Noord",nm:"Boka's",ad:"Van der Pekstraat 40HS",ph:"+31 6 43227885",em:"info@bokas.nl",no:"Moroccan-inspired, resident heron, Van der Pek neighbourhood"},
+{nb:"Noord",nm:"The Coffee Virus",ad:"Overhoeksplein 2",ph:"+31 20 244 2340",em:"",no:"Near A'DAM Tower, 3 bean options (sweet/sour/bitter), weekdays only"},
+{nb:"Noord",nm:"Dolce Alchemia Coffee Roasters",ad:"Zamenhofstraat 106c",ph:"+31 6 42716425",em:"RoasterJosh@brew-master.com",no:"Wood-fire roasting, ex-Bocca master roaster Josh, very personal service"},
+
+// ─ OOST ─────────────────────────────────────────────────────────────────────
+{nb:"Oost",nm:"Five Ways Coffee Roasters (Oost)",ad:"Boerhaaveplein 3",ph:"",em:"",no:"Brunch, own roastery, cocktails Thu–Sat, no laptops weekend"},
+{nb:"Oost",nm:"Stooker Specialty Coffee",ad:"Kastanjeplein 2",ph:"+31 20 737 1714",em:"hello@stookerspecialtycoffee.com",no:"B-Corp roastery, SCA barista academy, 200+ EU restaurant clients"},
+{nb:"Oost",nm:"Rum Baba East",ad:"Pretoriusstraat 15",ph:"+31 20 754 2281",em:"info@rumbaba.nl",no:"Largest Rum Baba: café + bakery + retail, near Oosterpark"},
+{nb:"Oost",nm:"Badeta Koffiebranders (Watergraafsmeer)",ad:"Helmholtzstraat 37",ph:"+31 20 785 9999",em:"info@badeta.nl",no:"Own roastery, Rwanda/Tanzania specialist, excellent cold brew"},
+{nb:"Oost",nm:"Wakuli Coffee (Wagenaarstraat)",ad:"Wagenaarstraat 70H",ph:"+31 6 18594163",em:"coffee@wakuli.com",no:"Ethical roastery, 20+ NL locations, direct-trade. Also: Linnaeusstraat 237a"},
+{nb:"Oost",nm:"YUSU",ad:"Andreas Bonnstraat 2",ph:"020 354 1465",em:"info@yusu.coffee",no:"Lively, terrace, Surinamese pastries, Black to Black beans, 4.6/1137"},
+{nb:"Oost",nm:"KAFFEE",ad:"Dapperplein 45",ph:"",em:"hallo@kaffeeamsterdam.nl",no:"Dapper neighbourhood gem, child corner, fresh juices, homemade food"},
+{nb:"Oost",nm:"Harvey Amsterdam",ad:"Galileïplantsoen 94",ph:"+31 6 39888090",em:"hello@coffeeatharvey.nl",no:"Watergraafsmeer, near Frankendael, Bocca beans, excellent pastries, child play area"},
+{nb:"Oost",nm:"noon coffee & culture",ad:"Kruislaan 259A",ph:"+31 6 34387330",em:"",no:"Arabic-inspired bookshop-café, next to Science Park station, Palestine Cola, tahini"},
+{nb:"Oost",nm:"Coffee Bru (Oost)",ad:"Beukenplein 14H",ph:"020 751 9956",em:"info@coffeebru.nl",no:"Beukenplein terrace location. Also De Pijp: Van Woustraat 113"},
+{nb:"Oost",nm:"Cafecito Linnaeusstraat",ad:"Linnaeusstraat 114",ph:"",em:"coffee@cafecito.nl",no:"Cafecito Oost location"},
+
+// ─ PLANTAGE / WEESPERBUURT ──────────────────────────────────────────────────
+{nb:"Plantage / Weesperbuurt",nm:"Coffee & Bites",ad:"Plantage Middenlaan 44-HS",ph:"+31 6 11510053",em:"",no:"Near Artis, GF-friendly, cozy, gluten-free bread praised"},
+{nb:"Plantage / Weesperbuurt",nm:"coffeecompany",ad:"Plantage Muidergracht 69-71",ph:"+31 20 237 4330",em:"",no:"Canal view, chain, Portuguese custard tarts"},
+
+// ─ OUD-ZUID / ZUIDAS / BUITENVELDERT ────────────────────────────────────────
+{nb:"Oud-Zuid / Zuidas",nm:"Caffènation Amsterdam",ad:"Warmondstraat 120",ph:"",em:"caffenationamsterdam@gmail.com",no:"Belgian specialty roaster, near Vondelpark, very loyal crowd"},
+{nb:"Oud-Zuid / Zuidas",nm:"Clapham Specialty Coffee",ad:"Willemsparkweg 152H",ph:"+31 6 25570366",em:"hello@claphamcoffee.com",no:"Art deco espresso bar, Stooker beans, rotating local art, Oud-Zuid"},
+{nb:"Oud-Zuid / Zuidas",nm:"LOT61 Oud-Zuid",ad:"Hendrik Jacobszstraat 18",ph:"+31 20 244 1988",em:"wholesale@lot61.com",no:"Third LOT61 location, residential Oud-Zuid"},
+{nb:"Oud-Zuid / Zuidas",nm:"Cafecito Van Baerlestraat",ad:"Van Baerlestraat 83",ph:"",em:"coffee@cafecito.nl",no:"Original Cafecito, own roastery, Museumplein area"},
+{nb:"Oud-Zuid / Zuidas",nm:"Cafecito Beethovenstraat",ad:"Beethovenstraat 19",ph:"",em:"coffee@cafecito.nl",no:"Quiet residential Zuid"},
+{nb:"Oud-Zuid / Zuidas",nm:"Cafecito Nassaukade",ad:"Nassaukade 330",ph:"",em:"coffee@cafecito.nl",no:"Canal-side location"},
+{nb:"Oud-Zuid / Zuidas",nm:"Cafecito Rijnstraat",ad:"Rijnstraat 32",ph:"",em:"coffee@cafecito.nl",no:"Rivierenbuurt"},
+{nb:"Oud-Zuid / Zuidas",nm:"Scandinavian Embassy Bakery",ad:"Europaplein 87",ph:"+31 6 81600140",em:"info@scandinavianembassy.nl",no:"Bakery/shop extension of De Pijp café, near RAI"},
+{nb:"Oud-Zuid / Zuidas",nm:"BLCK. Coffee and The Masters",ad:"Claude Debussylaan 269",ph:"+31 20 223 1206",em:"",no:"Zuidas office district, Chemex/V60, wall art vibe"},
+{nb:"Oud-Zuid / Zuidas",nm:"Coffee & Coconuts Zuidas",ad:"Gustav Mahlerplein 20",ph:"",em:"",no:"Business district, weekdays only, own roastery"},
+{nb:"Oud-Zuid / Zuidas",nm:"Coffee District (Olympiaplein)",ad:"Olympiaplein 111",ph:"",em:"",no:"Near Olympic stadium, Nordic minimalist, no laptops"},
+{nb:"Oud-Zuid / Zuidas",nm:"Coffee District (Buitenveldert)",ad:"Buitenveldertselaan 98",ph:"",em:"",no:"Great decaf praised, loyal local crowd"},
+
+// ─ IJBURG / ZEEBURGEREILAND ─────────────────────────────────────────────────
+{nb:"IJburg / Zeeburgereiland",nm:"Espressofabriek (IJburg)",ad:"IJburglaan 1489",ph:"020 774 7965",em:"info@espressofabriek.nl",no:"Second Espressofabriek, pioneer roastery since 2005"},
+{nb:"IJburg / Zeeburgereiland",nm:"Espressofabriek (Zeeburgereiland)",ad:"Roepie Kruizestraat 2",ph:"",em:"info@espressofabriek.nl",no:"Third Espressofabriek, opened 2020, Iced Cascara speciality"},
+];
+
+const nbs=[...new Set(DATA.map(d=>d.nb))];
+const fn=document.getElementById('fn');
+nbs.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;fn.appendChild(o);});
+
+const store={};
+const gs=i=>store['s_'+i]||'new';
+const ge=i=>store['e_'+i]!==undefined?store['e_'+i]:DATA[i].em||'';
+const gn=i=>store['n_'+i]!==undefined?store['n_'+i]:DATA[i].no||'';
+const ss=(i,v,s)=>{store['s_'+i]=v;s.className=v==='new'?'s-new':v==='contacted'?'s-contacted':v==='meeting'?'s-meeting':v==='converted'?'s-converted':'s-skip';stats();};
+const se=(i,v)=>{store['e_'+i]=v;stats();};
+const sn=(i,v)=>{store['n_'+i]=v;};
+
+function stats(){
+  let c=0,e=0;
+  DATA.forEach((_,i)=>{const s=gs(i);if(s!=='new'&&s!=='skip')c++;if(ge(i))e++;});
+  document.getElementById('cc').textContent=c;
+  document.getElementById('ec').textContent=e;
+  document.getElementById('tc').textContent=DATA.length;
+}
+
+function render(){
+  const wrap=document.getElementById('wrap');
+  wrap.innerHTML='';
+  const q=document.getElementById('q').value.toLowerCase();
+  const fs=document.getElementById('fs').value;
+  const fnv=document.getElementById('fn').value;
+  const fe=document.getElementById('fe').value;
+  let tot=0;
+  nbs.forEach(nb=>{
+    if(fnv&&fnv!==nb)return;
+    const rows=DATA.map((d,i)=>({d,i})).filter(({d,i})=>{
+      if(d.nb!==nb)return false;
+      if(fs&&gs(i)!==fs)return false;
+      const em=ge(i);
+      if(fe==='y'&&!em)return false;
+      if(fe==='n'&&em)return false;
+      if(q&&!d.nm.toLowerCase().includes(q)&&!d.ad.toLowerCase().includes(q)&&!em.toLowerCase().includes(q)&&!d.no.toLowerCase().includes(q))return false;
+      return true;
+    });
+    if(!rows.length)return;
+    tot+=rows.length;
+    const sec=document.createElement('div');sec.className='section';
+    const sh=document.createElement('div');sh.className='sh';
+    sh.innerHTML=`<h2>${nb}</h2><span class="badge">${rows.length}</span><span class="chev">▼</span>`;
+    const sb=document.createElement('div');sb.className='sb';
+    sh.addEventListener('click',()=>{sb.classList.toggle('hidden');sh.classList.toggle('collapsed');});
+    const tbl=document.createElement('table');
+    tbl.innerHTML=`<thead><tr><th class="w0">#</th><th class="w1">Café</th><th class="w2">Adres</th><th class="w3">Telefoon</th><th class="w4">Email</th><th class="w5">Status</th><th>Notes</th></tr></thead>`;
+    const tb=document.createElement('tbody');
+    rows.forEach(({d,i})=>{
+      const st=gs(i),em=ge(i),scl=st==='new'?'s-new':st==='contacted'?'s-contacted':st==='meeting'?'s-meeting':st==='converted'?'s-converted':'s-skip';
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td class="n">${i+1}</td><td class="nm">${d.nm}</td><td class="ad">${d.ad}</td><td class="ph">${d.ph||'<span style="color:#CCC">—</span>'}</td>
+<td class="em"><input type="email" placeholder="email toevoegen..." value="${em}" class="${em?'ok':''}" oninput="se(${i},this.value);this.className=this.value?'ok':''"></td>
+<td class="st"><select class="${scl}" onchange="ss(${i},this.value,this)"><option value="new" ${st==='new'?'selected':''}>🟡 New</option><option value="contacted" ${st==='contacted'?'selected':''}>🟢 Contacted</option><option value="meeting" ${st==='meeting'?'selected':''}>🔵 Meeting</option><option value="converted" ${st==='converted'?'selected':''}>🟠 Converted</option><option value="skip" ${st==='skip'?'selected':''}>⚫ Skip</option></select></td>
+<td class="no"><input type="text" placeholder="notitie..." value="${gn(i)}" oninput="sn(${i},this.value)"></td>`;
+      tb.appendChild(tr);
+    });
+    tbl.appendChild(tb);sb.appendChild(tbl);sec.appendChild(sh);sec.appendChild(sb);wrap.appendChild(sec);
+  });
+  document.getElementById('sc').textContent=tot;
+  document.getElementById('none').style.display=tot===0?'block':'none';
+  stats();
+}
+
+function csv(){
+  const h=['#','Buurt','Café','Adres','Telefoon','Email','Status','Notes'];
+  const rows=DATA.map((d,i)=>[i+1,d.nb,d.nm,d.ad,d.ph,ge(i),gs(i),gn(i).replace(/,/g,';')]);
+  const c=[h,...rows].map(r=>r.map(v=>`"${v}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([c],{type:'text/csv'}));
+  a.download='mesqo-amsterdam-leads.csv';a.click();
+}
+
+['q','fs','fn','fe'].forEach(id=>{
+  const el=document.getElementById(id);
+  el.addEventListener('change',render);
+  if(id==='q')el.addEventListener('input',render);
+});
+render();
+</script>
+</body>
+</html>
